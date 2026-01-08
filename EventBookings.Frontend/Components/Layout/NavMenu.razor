@@ -1,5 +1,15 @@
-﻿<h3>NavMenu</h3>
-
-@code {
-
-}
+﻿<nav class="navbar bg-dark border-bottom border-body" data-bs-theme="dark">
+    <div class="container-fluid d-flex gap-5">
+        <a class="navbar-brand" href="#">
+            <i class="bi bi-calendar-event-fill text-light"></i>
+            <span>Event Bookings</span>
+        </a>
+        <form class="w-50" role="search">
+            <input class="form-control form-control-lg" type="search" placeholder="Search for Events..."
+                   aria-label="Search for Events..."/>
+        </form>
+        <div>
+            <button class="btn btn-light" type="button">Login</button>
+        </div>
+    </div>
+</nav>
