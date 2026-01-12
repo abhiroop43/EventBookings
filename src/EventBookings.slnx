@@ -17,6 +17,7 @@
         <Project Path="Services/Notifications/Notifications.Api/Notifications.Api.csproj" />
     </Folder>
     <Folder Name="/UI/">
-        <Project Path="UI/EventBookings.Frontend/EventBookings.Frontend.csproj" />
+        <Project Path="UI/Frontend.Admin/Frontend.Admin.csproj" />
+        <Project Path="UI/Frontend/Frontend.csproj" />
     </Folder>
 </Solution>

@@ -1,4 +1,4 @@
-﻿namespace EventBookings.Frontend.Models;
+﻿namespace Frontend.Models;
 
 public class Event
 {
