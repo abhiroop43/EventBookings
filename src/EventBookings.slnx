@@ -1,0 +1,5 @@
+<Solution>
+    <Folder Name="/UI/">
+        <Project Path="UI/EventBookings.Frontend/EventBookings.Frontend.csproj"/>
+    </Folder>
+</Solution>

@@ -1,6 +1,6 @@
 ﻿namespace EventBookings.Frontend.Models
 {
-    public class Artist
+    public class Category
     {
     }
 }
