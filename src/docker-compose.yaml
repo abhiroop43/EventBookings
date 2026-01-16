@@ -1,0 +1,11 @@
+﻿services:
+  documents.api:
+    image: documents.api
+    build:
+      context: .
+      dockerfile: Services/Documents/Documents.Api/Dockerfile
+    depends_on: rustfs
+    restart: unless-stopped
+  
+  rustfs:
+    image: rustfs/rustfs:latest

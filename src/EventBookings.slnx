@@ -16,6 +16,10 @@
     <Folder Name="/Services/Notifications/">
         <Project Path="Services/Notifications/Notifications.Api/Notifications.Api.csproj" />
     </Folder>
+    <Folder Name="/Solution Items/">
+        <File Path="docker-compose.override.yaml"/>
+        <File Path="docker-compose.yaml"/>
+    </Folder>
     <Folder Name="/UI/">
         <Project Path="UI/Frontend.Admin/Frontend.Admin.csproj" />
         <Project Path="UI/Frontend/Frontend.csproj" />
