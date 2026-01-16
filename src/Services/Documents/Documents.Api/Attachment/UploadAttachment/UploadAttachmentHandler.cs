@@ -52,14 +52,11 @@ public class UploadAttachmentCommandHandler(
 
         var response = await _s3Client.PutObjectAsync(request, cancellationToken);
 
-        if (response.HttpStatusCode != HttpStatusCode.OK)
-        {
-            logger.LogError("Failed to upload file, Status Code: {StatusCode}", response.HttpStatusCode);
-            return new UploadAttachmentResult(false, string.Empty,
-                $"Failed to upload file, Status Code: {response.HttpStatusCode}");
-        }
+        if (response.HttpStatusCode == HttpStatusCode.OK) return new UploadAttachmentResult(true, command.FileName);
 
-        return new UploadAttachmentResult(true, command.FileName);
+        logger.LogError("Failed to upload file, Status Code: {StatusCode}", response.HttpStatusCode);
+        return new UploadAttachmentResult(false, string.Empty,
+            $"Failed to upload file, Status Code: {response.HttpStatusCode}");
     }
 
     private async Task<bool> CreateBucketAsync(string bucketName)
