@@ -4,23 +4,23 @@ using Amazon.S3;
 using Amazon.S3.Model;
 using BuildingBlocks.CQRS;
 using Documents.Api.Configuration;
-using Documents.Api.Dtos;
 using FluentValidation;
 using Microsoft.Extensions.Options;
 
 namespace Documents.Api.Attachment.UploadAttachment;
 
-public record UploadAttachmentCommand(UploadRequest Request) : ICommand<UploadAttachmentResult>;
+public record UploadAttachmentCommand(string FileName, string FileContent, string ContentType)
+    : ICommand<UploadAttachmentResult>;
 
-public record UploadAttachmentResult(string FileId);
+public record UploadAttachmentResult(bool IsSuccess, string FileId, string? ErrorMessage = null);
 
 public class UploadAttachmentCommandValidator : AbstractValidator<UploadAttachmentCommand>
 {
     public UploadAttachmentCommandValidator()
     {
-        RuleFor(x => x.Request).NotNull();
-        RuleFor(x => x.Request.FileName).NotEmpty().WithMessage("File Name is required");
-        RuleFor(x => x.Request.FileContent).NotEmpty().WithMessage("File Content is required");
+        RuleFor(x => x).NotNull();
+        RuleFor(x => x.FileName).NotEmpty().WithMessage("File Name is required");
+        RuleFor(x => x.FileContent).NotEmpty().WithMessage("File Content is required");
     }
 }
 
@@ -43,27 +43,32 @@ public class UploadAttachmentCommandHandler(
         _s3Client =
             new AmazonS3Client(new BasicAWSCredentials(configuration.Value.AccessKey, configuration.Value.SecretKey),
                 clientConfig);
-        if (!await BucketExistsAsync(configuration.Value.Bucket))
-        {
-            var bucketCreated = await CreateBucketAsync(configuration.Value.Bucket);
+        var bucketCreated = await CreateBucketAsync(configuration.Value.Bucket);
 
-            if (!bucketCreated) return new UploadAttachmentResult(string.Empty);
+        if (!bucketCreated)
+        {
+            logger.LogError("Failed to create bucket with name: {BucketName}", configuration.Value.Bucket);
+            return new UploadAttachmentResult(false, string.Empty, "Failed to create bucket");
         }
 
         PutObjectRequest objectRequest = new()
         {
             BucketName = configuration.Value.Bucket,
-            Key = request.Request.FileName,
-            InputStream = new MemoryStream(Convert.FromBase64String(request.Request.FileContent)),
-            ContentType = request.Request.ContentType
+            Key = request.FileName,
+            InputStream = new MemoryStream(Convert.FromBase64String(request.FileContent)),
+            ContentType = request.ContentType
         };
 
         var response = await _s3Client.PutObjectAsync(objectRequest, cancellationToken);
 
         if (response.HttpStatusCode != HttpStatusCode.OK)
-            throw new Exception($"Failed to upload attachment to S3. Status code: {response.HttpStatusCode}");
+        {
+            logger.LogError("Failed to upload file, Status Code: {StatusCode}", response.HttpStatusCode);
+            return new UploadAttachmentResult(false, string.Empty,
+                $"Failed to upload file, Status Code: {response.HttpStatusCode}");
+        }
 
-        return new UploadAttachmentResult(request.Request.FileName);
+        return new UploadAttachmentResult(true, request.FileName);
     }
 
     private async Task<bool> CreateBucketAsync(string bucketName)
@@ -85,10 +90,21 @@ public class UploadAttachmentCommandHandler(
             MaxKeys = 1
         };
 
-        var response = await _s3Client.ListObjectsV2Async(request);
+        try
+        {
+            var response = await _s3Client.ListObjectsV2Async(request);
+            if (response == null) return false;
 
-        if (response.HttpStatusCode != HttpStatusCode.OK) return false;
+            if (response.HttpStatusCode != HttpStatusCode.OK) return false;
 
-        return response.S3Objects.Count != 0;
+            return response.S3Objects.Count != 0;
+        }
+        catch (NoSuchBucketException e)
+        {
+            Console.WriteLine(e);
+            logger.LogError(e, "Failed to check bucket exists");
+        }
+
+        return false;
     }
 }
