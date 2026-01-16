@@ -1,13 +1,4 @@
-﻿using System.Net;
-using Amazon.Runtime;
-using Amazon.S3;
-using Amazon.S3.Model;
-using BuildingBlocks.CQRS;
-using Documents.Api.Configuration;
-using FluentValidation;
-using Microsoft.Extensions.Options;
-
-namespace Documents.Api.Attachment.UploadAttachment;
+﻿namespace Documents.Api.Attachment.UploadAttachment;
 
 public record UploadAttachmentCommand(string FileName, string FileContent, string ContentType)
     : ICommand<UploadAttachmentResult>;
@@ -30,7 +21,7 @@ public class UploadAttachmentCommandHandler(
 {
     private IAmazonS3 _s3Client;
 
-    public async Task<UploadAttachmentResult> Handle(UploadAttachmentCommand request,
+    public async Task<UploadAttachmentResult> Handle(UploadAttachmentCommand command,
         CancellationToken cancellationToken)
     {
         var clientConfig = new AmazonS3Config
@@ -51,15 +42,15 @@ public class UploadAttachmentCommandHandler(
             return new UploadAttachmentResult(false, string.Empty, "Failed to create bucket");
         }
 
-        PutObjectRequest objectRequest = new()
+        PutObjectRequest request = new()
         {
             BucketName = configuration.Value.Bucket,
-            Key = request.FileName,
-            InputStream = new MemoryStream(Convert.FromBase64String(request.FileContent)),
-            ContentType = request.ContentType
+            Key = command.FileName,
+            InputStream = new MemoryStream(Convert.FromBase64String(command.FileContent)),
+            ContentType = command.ContentType
         };
 
-        var response = await _s3Client.PutObjectAsync(objectRequest, cancellationToken);
+        var response = await _s3Client.PutObjectAsync(request, cancellationToken);
 
         if (response.HttpStatusCode != HttpStatusCode.OK)
         {
@@ -68,7 +59,7 @@ public class UploadAttachmentCommandHandler(
                 $"Failed to upload file, Status Code: {response.HttpStatusCode}");
         }
 
-        return new UploadAttachmentResult(true, request.FileName);
+        return new UploadAttachmentResult(true, command.FileName);
     }
 
     private async Task<bool> CreateBucketAsync(string bucketName)

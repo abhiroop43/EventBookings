@@ -1,8 +1,4 @@
-﻿using Carter;
-using Mapster;
-using MediatR;
-
-namespace Documents.Api.Attachment.UploadAttachment;
+﻿namespace Documents.Api.Attachment.UploadAttachment;
 
 public record UploadRequest(string FileName, string FileContent, string ContentType);
 
@@ -26,7 +22,7 @@ public class UploadAttachmentEndpoint : ICarterModule
             .WithName("Upload")
             .Produces<UploadResponse>(StatusCodes.Status201Created)
             .ProducesProblem(StatusCodes.Status400BadRequest)
-            .WithSummary("Upload attachment")
+            .WithSummary("Upload Attachment")
             .WithDescription("Uploads an attachment and returns the key");
     }
 }

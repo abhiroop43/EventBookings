@@ -1,7 +1,4 @@
-﻿using Carter;
-using MediatR;
-
-namespace Documents.Api.Attachment.DownloadAttachment;
+﻿namespace Documents.Api.Attachment.DownloadAttachment;
 
 public record DownloadResponse(string FileContent);
 
@@ -9,7 +6,12 @@ public class DownloadAttachmentEndpoint : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {
-        app.MapGet("/download/{fileId}", async (string fileId, ISender sender) => { })
+        app.MapGet("/download/{fileId}", async (string fileId, ISender sender) =>
+            {
+                var query = new DownloadAttachmentQuery(fileId);
+                var result = await sender.Send(query);
+                return result.Adapt<DownloadResponse>();
+            })
             .WithName("Download")
             .Produces<DownloadResponse>()
             .ProducesProblem(StatusCodes.Status404NotFound)

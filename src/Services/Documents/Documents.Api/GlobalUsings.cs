@@ -1,0 +1,11 @@
+﻿global using BuildingBlocks.CQRS;
+global using System.Net;
+global using Amazon.Runtime;
+global using Amazon.S3;
+global using Amazon.S3.Model;
+global using Documents.Api.Configuration;
+global using FluentValidation;
+global using Microsoft.Extensions.Options;
+global using Carter;
+global using Mapster;
+global using MediatR;

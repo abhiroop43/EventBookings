@@ -4,7 +4,8 @@
     build:
       context: .
       dockerfile: Services/Documents/Documents.Api/Dockerfile
-    depends_on: rustfs
+    depends_on:
+      - rustfs
     restart: unless-stopped
   
   rustfs:
