@@ -1,4 +1,25 @@
 ﻿services:
+  documents.api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - Kestrel__EndPoints__WebApi__Protocols=Http1
+      - Kestrel__EndPoints__WebApi__Url=http://+:8080
+      - RustFS__ServiceUrl=http://rustfs:9000
+      - RustFS__AccessKey=rustfsadmin
+      - RustFS__SecretKey=rustfsadmin
+      - RustFS__Region=us-east-1
+      - RustFS__Bucket=event-bookings
+    depends_on:
+      - rustfs
+    restart: unless-stopped
+    ports:
+      - "6001:8080"
+    volumes:
+      - ${HOME}/.microsoft/usersecrets:/home/app/.microsoft/usersecrets:ro
+      - ${HOME}/.aspnet/https:/home/app/.aspnet/https:ro
+  
+  
   rustfs:
     container_name: rustfs-server
     security_opt:
