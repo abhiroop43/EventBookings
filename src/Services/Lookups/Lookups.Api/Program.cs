@@ -1,39 +1,39 @@
+using BuildingBlocks.Behaviors;
+using Carter;
+using Lookups.Api.Data;
+using Lookups.Api.Data.DatabaseContext;
+using Microsoft.EntityFrameworkCore;
+using MongoDB.Driver;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
+builder.Services.AddCarter();
+builder.Services.AddMediatR(cfg =>
+{
+    cfg.RegisterServicesFromAssembly(typeof(Program).Assembly);
+    cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
+    cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
+});
+
+var connectionString = builder.Configuration.GetConnectionString("Database");
+var databaseName = builder.Configuration.GetValue<string>("DatabaseName");
+var mongoClient = new MongoClient(connectionString);
+
+builder.Services.AddDbContext<LookupsDbContext>(options => options.UseMongoDB(mongoClient, databaseName!));
+
+builder.Services.AddScoped<ILookupRepository, LookupRepository>();
+builder.Services.Decorate<ILookupRepository, CachedLookupRepository>();
+
 var app = builder.Build();
 
+app.MapCarter();
+app.UseExceptionHandler(opts => { });
+
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
+if (app.Environment.IsDevelopment()) app.MapOpenApi();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-    {
-        var forecast = Enumerable.Range(1, 5).Select(index =>
-                new WeatherForecast
-                (
-                    DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                    Random.Shared.Next(-20, 55),
-                    summaries[Random.Shared.Next(summaries.Length)]
-                ))
-            .ToArray();
-        return forecast;
-    })
-    .WithName("GetWeatherForecast");
-
-app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
+await app.RunAsync();
