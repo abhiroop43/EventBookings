@@ -19,12 +19,12 @@ public class LookupsDbContext(DbContextOptions<LookupsDbContext> options) : DbCo
         foreach (var entry in base.ChangeTracker.Entries<Models.Lookup>())
         {
             entry.Entity.UpdatedAt = DateTime.UtcNow;
-            entry.Entity.UpdatedBy = "System";
+            entry.Entity.UpdatedBy = "System"; // will be updated later to the current user id
 
             if (entry.State != EntityState.Added) continue;
 
             entry.Entity.CreatedAt = DateTime.UtcNow;
-            entry.Entity.CreatedBy = "System";
+            entry.Entity.CreatedBy = "System"; // will be updated later to the current user id
         }
 
         Database.AutoTransactionBehavior = AutoTransactionBehavior.Never;

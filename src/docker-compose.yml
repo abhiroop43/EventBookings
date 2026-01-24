@@ -1,9 +1,14 @@
-﻿services:
+services:
   documents.api:
     image: documents.api
     build:
       context: .
       dockerfile: Services/Documents/Documents.Api/Dockerfile
-  
+  lookups.api:
+    image: ${DOCKER_REGISTRY-}lookupsapi
+    build:
+      context: .
+      dockerfile: Services/Lookups/Lookups.Api/Dockerfile
+
   rustfs:
     image: rustfs/rustfs:latest

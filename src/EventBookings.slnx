@@ -24,4 +24,7 @@
         <Project Path="UI/Frontend.Admin/Frontend.Admin.csproj" />
         <Project Path="UI/Frontend/Frontend.csproj" />
     </Folder>
+    <Project Path="docker-compose.dcproj">
+        <Build/>
+    </Project>
 </Solution>
