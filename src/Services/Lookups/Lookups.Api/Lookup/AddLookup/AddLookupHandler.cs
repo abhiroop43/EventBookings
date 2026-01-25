@@ -1,4 +1,5 @@
 ﻿using BuildingBlocks.CQRS;
+using Lookups.Api.Data;
 
 namespace Lookups.Api.Lookup.AddLookup;
 
@@ -6,10 +7,13 @@ public record AddLookupCommand(Models.Lookup Lookup) : ICommand<AddLookupResult>
 
 public record AddLookupResult(string Id);
 
-public class AddLookupCommandHandler : ICommandHandler<AddLookupCommand, AddLookupResult>
+public class AddLookupCommandHandler(ILookupRepository repository) : ICommandHandler<AddLookupCommand, AddLookupResult>
 {
-    public Task<AddLookupResult> Handle(AddLookupCommand request, CancellationToken cancellationToken)
+    public async Task<AddLookupResult> Handle(AddLookupCommand command, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        var lookup = command.Lookup;
+        await repository.AddAsync(lookup, cancellationToken);
+
+        return new AddLookupResult(lookup.Id.ToString());
     }
 }
