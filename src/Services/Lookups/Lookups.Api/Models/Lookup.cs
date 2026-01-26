@@ -11,7 +11,7 @@ public class Lookup
 
     [BsonElement("value")] public required string Value { get; set; }
 
-    [BsonElement("type")] public required string Type { get; set; }
+    [BsonElement("type")] public required string LookupType { get; set; }
 
     [BsonElement("children")] public List<Lookup> Children { get; set; } = [];
 

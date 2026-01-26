@@ -4,7 +4,11 @@ using MediatR;
 
 namespace Lookups.Api.Lookup.AddLookup;
 
-public record AddLookupRequest(Models.Lookup Lookup);
+public record AddLookupChildDto(string Key, string Value, string LookupType, List<AddLookupChildDto> Children);
+
+public record AddLookupDto(string Key, string Value, string LookupType, List<AddLookupChildDto> Children);
+
+public record AddLookupRequest(AddLookupDto Lookup);
 
 public record AddLookupResponse(string Id);
 

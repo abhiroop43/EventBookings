@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using Microsoft.Extensions.Caching.Distributed;
+using MongoDB.Bson;
 
 namespace Lookups.Api.Data;
 
@@ -7,7 +8,7 @@ public class CachedLookupRepository(ILookupRepository repository, IDistributedCa
     : ILookupRepository
 {
     public async Task<Models.Lookup?> GetDetailsAsync(
-        string key,
+        ObjectId id,
         CancellationToken cancellationToken = default
     )
     {
@@ -19,49 +20,75 @@ public class CachedLookupRepository(ILookupRepository repository, IDistributedCa
                 cachedLookupDetails
             );
             if (deserializeLookupDetails != null)
-            {
                 return deserializeLookupDetails;
-            }
         }
 
-        var lookupDetails = await repository.GetDetailsAsync(key, cancellationToken);
-        await cache.SetStringAsync(key, JsonSerializer.Serialize(lookupDetails), cancellationToken);
+        var lookupDetails = await repository.GetDetailsAsync(id, cancellationToken);
+        await cache.SetStringAsync(
+            id.ToString(),
+            JsonSerializer.Serialize(lookupDetails),
+            cancellationToken
+        );
         return lookupDetails;
     }
 
-    public Task<IEnumerable<Models.Lookup>> GetAllAsync(
-        CancellationToken cancellationToken = default
-    )
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<IEnumerable<Models.Lookup>> GetByCategoryAsync(
+    public async Task<IList<Models.Lookup>> GetByCategoryAsync(
         string lookupType,
         CancellationToken cancellationToken = default
     )
     {
-        throw new NotImplementedException();
+        var cachedLookups = await cache.GetStringAsync(lookupType, cancellationToken);
+
+        if (!string.IsNullOrEmpty(cachedLookups))
+        {
+            var deserializedLookups = JsonSerializer.Deserialize<IList<Models.Lookup>>(
+                cachedLookups
+            );
+            if (deserializedLookups != null)
+                return deserializedLookups;
+        }
+
+        var lookups = await repository.GetByCategoryAsync(lookupType, cancellationToken);
+        await cache.SetStringAsync(
+            lookupType,
+            JsonSerializer.Serialize(lookups),
+            cancellationToken
+        );
+        return lookups;
     }
 
-    public Task<Models.Lookup> AddAsync(
+    public async Task<Models.Lookup> AddAsync(
         Models.Lookup lookup,
         CancellationToken cancellationToken = default
     )
     {
-        throw new NotImplementedException();
+        var savedLookup = await repository.AddAsync(lookup, cancellationToken);
+        await cache.SetStringAsync(
+            lookup.Key,
+            JsonSerializer.Serialize(savedLookup),
+            cancellationToken
+        );
+        return savedLookup;
     }
 
-    public Task<bool> UpdateAsync(
+    public async Task<bool> UpdateAsync(
         Models.Lookup lookup,
         CancellationToken cancellationToken = default
     )
     {
-        throw new NotImplementedException();
+        var updated = await repository.UpdateAsync(lookup, cancellationToken);
+        if (!updated)
+            return false;
+        await cache.SetStringAsync(lookup.Key, JsonSerializer.Serialize(lookup), cancellationToken);
+        return true;
     }
 
-    public Task<bool> DeleteAsync(string key, CancellationToken cancellationToken = default)
+    public async Task<bool> DeleteAsync(ObjectId id, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        var deleted = await repository.DeleteAsync(id, cancellationToken);
+        if (!deleted)
+            return false;
+        await cache.RemoveAsync(id.ToString(), cancellationToken);
+        return true;
     }
 }

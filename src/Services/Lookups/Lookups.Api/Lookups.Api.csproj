@@ -28,12 +28,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Folder Include="Lookup\DeleteLookup\"/>
-        <Folder Include="Lookup\GetLookupsByType\"/>
-        <Folder Include="Lookup\UpdateLookup\"/>
-    </ItemGroup>
-
-    <ItemGroup>
         <ProjectReference Include="..\..\..\BuildingBlocks\BuildingBlocks\BuildingBlocks.csproj"/>
     </ItemGroup>
 
