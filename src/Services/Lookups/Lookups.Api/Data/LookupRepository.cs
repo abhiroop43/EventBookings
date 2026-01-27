@@ -18,12 +18,16 @@ public class LookupRepository(LookupsDbContext dbContext) : ILookupRepository
 
     public async Task<IList<Models.Lookup>> GetByCategoryAsync(
         string lookupType,
+        int pageNumber = 1,
+        int pageSize = 10,
         CancellationToken cancellationToken = default
     )
     {
         return await dbContext
             .Lookups.AsNoTracking()
             .Where(x => x.LookupType == lookupType)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync(cancellationToken);
     }
 

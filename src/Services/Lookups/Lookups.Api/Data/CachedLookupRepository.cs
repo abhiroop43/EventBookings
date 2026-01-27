@@ -12,7 +12,7 @@ public class CachedLookupRepository(ILookupRepository repository, IDistributedCa
         CancellationToken cancellationToken = default
     )
     {
-        var cachedLookupDetails = await cache.GetStringAsync(key, cancellationToken);
+        var cachedLookupDetails = await cache.GetStringAsync(id.ToString(), cancellationToken);
 
         if (!string.IsNullOrEmpty(cachedLookupDetails))
         {
@@ -34,10 +34,13 @@ public class CachedLookupRepository(ILookupRepository repository, IDistributedCa
 
     public async Task<IList<Models.Lookup>> GetByCategoryAsync(
         string lookupType,
+        int pageNumber = 1,
+        int pageSize = 10,
         CancellationToken cancellationToken = default
     )
     {
-        var cachedLookups = await cache.GetStringAsync(lookupType, cancellationToken);
+        var cacheKey = $"{lookupType}_{pageNumber}_{pageSize}";
+        var cachedLookups = await cache.GetStringAsync(cacheKey, cancellationToken);
 
         if (!string.IsNullOrEmpty(cachedLookups))
         {
@@ -48,12 +51,13 @@ public class CachedLookupRepository(ILookupRepository repository, IDistributedCa
                 return deserializedLookups;
         }
 
-        var lookups = await repository.GetByCategoryAsync(lookupType, cancellationToken);
-        await cache.SetStringAsync(
+        var lookups = await repository.GetByCategoryAsync(
             lookupType,
-            JsonSerializer.Serialize(lookups),
+            pageNumber,
+            pageSize,
             cancellationToken
         );
+        await cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(lookups), cancellationToken);
         return lookups;
     }
 
