@@ -1,4 +1,5 @@
 using BuildingBlocks.Behaviors;
+using BuildingBlocks.Exceptions.Handler;
 using Carter;
 using Lookups.Api.Data;
 using Lookups.Api.Data.DatabaseContext;
@@ -23,10 +24,20 @@ var connectionString = builder.Configuration.GetConnectionString("Database");
 var databaseName = builder.Configuration.GetValue<string>("DatabaseName");
 var mongoClient = new MongoClient(connectionString);
 
-builder.Services.AddDbContext<LookupsDbContext>(options => options.UseMongoDB(mongoClient, databaseName!));
+builder.Services.AddDbContext<LookupsDbContext>(options =>
+    options.UseMongoDB(mongoClient, databaseName!)
+);
 
 builder.Services.AddScoped<ILookupRepository, LookupRepository>();
 builder.Services.Decorate<ILookupRepository, CachedLookupRepository>();
+
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration.GetConnectionString("Redis");
+    options.InstanceName = "EventLookups";
+});
+
+builder.Services.AddExceptionHandler<CustomExceptionHandler>();
 
 var app = builder.Build();
 
@@ -34,6 +45,7 @@ app.MapCarter();
 app.UseExceptionHandler(opts => { });
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment()) app.MapOpenApi();
+if (app.Environment.IsDevelopment())
+    app.MapOpenApi();
 
 await app.RunAsync();
